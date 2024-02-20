@@ -6,6 +6,7 @@ import (
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 
 	corev1beta1 "github.com/openstack-k8s-operators/openstack-operator/apis/core/v1beta1"
 	telemetryv1 "github.com/openstack-k8s-operators/telemetry-operator/api/v1beta1"
@@ -36,6 +37,28 @@ func ReconcileTelemetry(ctx context.Context, instance *corev1beta1.OpenStackCont
 		}
 		instance.Status.Conditions.Remove(corev1beta1.OpenStackControlPlaneTelemetryReadyCondition)
 		return ctrl.Result{}, nil
+	}
+
+	svcs, err := service.GetServicesListWithLabel(
+		ctx,
+		helper,
+		instance.Namespace,
+		map[string]string{"app.kubernetes.io/name": "metric-storage-prometheus"},
+	)
+
+	endpointDetails, _, err := EnsureEndpointConfig(
+		ctx,
+		instance,
+		helper,
+		telemetry,
+		svcs,
+		nil,
+		corev1beta1.Override{},
+		corev1beta1.OpenStackControlPlaneExposeSwiftReadyCondition,
+		false, // TODO (mschuppert) could be removed when all integrated service support TLS
+	)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	helper.GetLogger().Info("Reconciling Telemetry", telemetryNamespaceLabel, instance.Namespace, telemetryNameLabel, telemetryName)
