@@ -9,4 +9,4 @@ metadata:
     app.kubernetes.io/created-by: openstack-operator
   name: openstackclient-sample
 spec:
-  # TODO(user): Add fields here
+  containerImage: quay.io/podified-antelope-centos9/openstack-openstackclient:current-podified

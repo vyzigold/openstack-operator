@@ -15389,6 +15389,8 @@ spec:
                                 default: CeilometerPassword
                                 type: string
                             type: object
+                          proxyImage:
+                            type: string
                           rabbitMqClusterName:
                             default: rabbitmq
                             type: string
@@ -15399,12 +15401,31 @@ spec:
                             type: string
                           sgCoreImage:
                             type: string
+                          tls:
+                            properties:
+                              api:
+                                properties:
+                                  internal:
+                                    properties:
+                                      secretName:
+                                        type: string
+                                    type: object
+                                  public:
+                                    properties:
+                                      secretName:
+                                        type: string
+                                    type: object
+                                type: object
+                              caBundleSecretName:
+                                type: string
+                            type: object
                         required:
                         - centralImage
                         - computeImage
                         - ipmiImage
                         - nodeExporterImage
                         - notificationImage
+                        - proxyImage
                         - secret
                         - sgCoreImage
                         type: object

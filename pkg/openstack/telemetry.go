@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
@@ -57,9 +58,31 @@ func ReconcileTelemetry(ctx context.Context, instance *corev1beta1.OpenStackCont
 		corev1beta1.OpenStackControlPlaneExposeSwiftReadyCondition,
 		false, // TODO (mschuppert) could be removed when all integrated service support TLS
 	)
+
+	svcs_ceil, err := service.GetServicesListWithLabel(
+		ctx,
+		helper,
+		instance.Namespace,
+		map[string]string{common.AppSelector: "ceilometer"},
+	)
+
+	endpointDetails, _, err = EnsureEndpointConfig(
+		ctx,
+		instance,
+		helper,
+		telemetry,
+		svcs_ceil,
+		nil,
+		corev1beta1.Override{},
+		corev1beta1.OpenStackControlPlaneExposeSwiftReadyCondition,
+		false, // TODO (mschuppert) could be removed when all integrated service support TLS
+	)
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	// update TLS settings with cert secret
+	instance.Spec.Telemetry.Template.Ceilometer.TLS.API.Internal.SecretName = endpointDetails.GetEndptCertSecret(service.EndpointInternal)
 
 	helper.GetLogger().Info("Reconciling Telemetry", telemetryNamespaceLabel, instance.Namespace, telemetryNameLabel, telemetryName)
 	op, err := controllerutil.CreateOrPatch(ctx, helper.GetClient(), telemetry, func() error {
