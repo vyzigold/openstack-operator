@@ -361,6 +361,12 @@ func (r *OpenStackControlPlane) ValidateCreateServices(basePath *field.Path) (ad
 		errors = append(errors, validateTLSOverrideSpec(&r.Spec.Watcher.APIOverride.Route, basePath.Child("watcher").Child("apiOverride").Child("route"))...)
 	}
 
+	if r.Spec.Telemetry.Enabled {
+		errors = append(errors, r.Spec.Telemetry.Template.ValidateCreate(basePath.Child("telemetry").Child("template"), r.Namespace)...)
+		// TODO:
+		//errors = append(errors, validateTLSOverrideSpec(&r.Spec.Watcher.APIOverride.Route, basePath.Child("watcher").Child("apiOverride").Child("route"))...)
+	}
+
 	// Validation for remaining services...
 	if r.Spec.Galera.Enabled {
 		for key, s := range *r.Spec.Galera.Templates {
@@ -555,6 +561,14 @@ func (r *OpenStackControlPlane) ValidateUpdateServices(old OpenStackControlPlane
 		}
 		errors = append(errors, r.Spec.Watcher.Template.ValidateUpdate(*old.Watcher.Template, basePath.Child("watcher").Child("template"), r.Namespace)...)
 		errors = append(errors, validateTLSOverrideSpec(&r.Spec.Watcher.APIOverride.Route, basePath.Child("watcher").Child("apiOverride").Child("route"))...)
+	}
+	if r.Spec.Telemetry.Enabled {
+		if old.Telemetry.Template == nil {
+			old.Telemetry.Template = &telemetryv1.TelemetrySpecCore{}
+		}
+		errors = append(errors, r.Spec.Telemetry.Template.ValidateUpdate(*old.Telemetry.Template, basePath.Child("telemetry").Child("template"), r.Namespace)...)
+		// TODO
+		//errors = append(errors, validateTLSOverrideSpec(&r.Spec.Telemetry.APIOverride.Route, basePath.Child("telemetry").Child("apiOverride").Child("route"))...)
 	}
 
 	if r.Spec.Memcached.Enabled {
